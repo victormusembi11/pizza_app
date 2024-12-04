@@ -1,12 +1,58 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 import 'package:pizza_app/components/pizza_item.dart';
 import './cart.dart';
 
-class MyHomePage extends StatelessWidget {
+class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
 
   final String title;
+
+  @override
+  _MyHomePageState createState() => _MyHomePageState();
+}
+
+class _MyHomePageState extends State<MyHomePage> {
+  List<dynamic> pizzas = [];
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchPizzas();
+  }
+
+  Future<void> _fetchPizzas() async {
+    final url = Uri.parse('http://localhost:5000/pizzas/get.php');
+
+    try {
+      final response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        setState(() {
+          pizzas = data['data'];
+          isLoading = false;
+        });
+      } else {
+        setState(() {
+          isLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to load pizzas')),
+        );
+      }
+    } catch (error) {
+      setState(() {
+        isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $error')),
+      );
+    }
+  }
 
   void _addToCart(String pizzaName) {
     // Implement your add-to-cart functionality here
@@ -18,7 +64,7 @@ class MyHomePage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(title),
+        title: Text(widget.title),
         actions: [
           IconButton(
             icon: const Icon(Icons.shopping_cart),
@@ -31,35 +77,21 @@ class MyHomePage extends StatelessWidget {
           ),
         ],
       ),
-      body: ListView(
-        children: [
-          PizzaItem(
-            imageUrl:
-                'https://i0.wp.com/daddioskitchen.com/wp-content/uploads/2023/01/IMG-5299.jpg?fit=800%2C800&ssl=1',
-            name: 'Pepperoni Pizza',
-            description: 'A delicious pepperoni pizza with mozzarella cheese.',
-            price: 12.99,
-            onAddToCart: () => _addToCart('Pepperoni Pizza'),
-          ),
-          PizzaItem(
-            imageUrl:
-                'https://i0.wp.com/saturdayswithfrank.com/wp-content/uploads/marg-pizza-f.jpg?fit=2500%2C1249&ssl=1',
-            name: 'Margherita Pizza',
-            description:
-                'Classic Margherita with fresh basil and tomato sauce.',
-            price: 10.99,
-            onAddToCart: () => _addToCart('Margherita Pizza'),
-          ),
-          PizzaItem(
-            imageUrl:
-                'https://i0.wp.com/www.slapyodaddybbq.com/wp-content/uploads/BBQChickenPizza-foodgawker.jpg?fit=600%2C600&ssl=1',
-            name: 'BBQ Chicken Pizza',
-            description: 'Topped with BBQ chicken, red onions, and cilantro.',
-            price: 14.99,
-            onAddToCart: () => _addToCart('BBQ Chicken Pizza'),
-          ),
-        ],
-      ),
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : ListView.builder(
+              itemCount: pizzas.length,
+              itemBuilder: (ctx, index) {
+                final pizza = pizzas[index];
+                return PizzaItem(
+                  imageUrl: pizza['imageUrl'],
+                  name: pizza['name'],
+                  description: pizza['description'],
+                  price: pizza['price'],
+                  onAddToCart: () => _addToCart(pizza['name']),
+                );
+              },
+            ),
     );
   }
 }
