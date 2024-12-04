@@ -4,7 +4,7 @@ class PizzaItem extends StatelessWidget {
   final String imageUrl;
   final String name;
   final String description;
-  final double price;
+  final String price;
   final VoidCallback onAddToCart;
 
   const PizzaItem({
@@ -53,7 +53,7 @@ class PizzaItem extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  '\$${price.toStringAsFixed(2)}',
+                  '\$$price',
                   style: Theme.of(context)
                       .textTheme
                       .titleLarge
