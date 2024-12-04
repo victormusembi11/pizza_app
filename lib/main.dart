@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import './providers/auth_provider.dart';
 import './screens/login.dart';
 import './components/bottom_nav_bar.dart';
+import './components/admin_bottom_nav_bar.dart';
 
 void main() {
   runApp(
@@ -27,10 +28,17 @@ class MyApp extends StatelessWidget {
       ),
       home: Consumer<AuthProvider>(
         builder: (context, authProvider, child) {
-          // Decide which screen to show based on authentication state
-          return authProvider.isAuthenticated
-              ? const BottomNavBar()
-              : const LoginPage();
+          if (!authProvider.isAuthenticated) {
+            return const LoginPage();
+          } else {
+            switch (authProvider.role) {
+              case 'ADMIN':
+                return const AdminBottomNavBar();
+              case 'USER':
+              default:
+                return const BottomNavBar();
+            }
+          }
         },
       ),
     );
