@@ -36,8 +36,13 @@ class LoginPage extends StatelessWidget {
           final responseData = jsonDecode(response.body);
 
           if (responseData['status'] == 'success') {
-            final role = responseData['data']['role'];
-            context.read<AuthProvider>().login(role);
+            final userData = responseData['data'];
+            final id = userData['id'];
+            final name = userData['name'];
+            final role = userData['role'];
+
+            context.read<AuthProvider>().login(id, email, name, role);
+
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Login successful!')),
             );
