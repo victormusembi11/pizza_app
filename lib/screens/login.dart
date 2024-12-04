@@ -1,6 +1,7 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
-
 import '../providers/auth_provider.dart';
 
 class LoginPage extends StatelessWidget {
@@ -11,15 +12,46 @@ class LoginPage extends StatelessWidget {
     final emailController = TextEditingController();
     final passwordController = TextEditingController();
 
-    void _login() {
-      if (emailController.text == 'user@example.com' &&
-          passwordController.text == 'password') {
-        // Successful login
-        context.read<AuthProvider>().login();
-      } else {
-        // Show error message
+    Future<void> _login() async {
+      final email = emailController.text;
+      final password = passwordController.text;
+
+      if (email.isEmpty || password.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Invalid credentials')),
+          const SnackBar(content: Text('Please fill in all fields')),
+        );
+        return;
+      }
+
+      try {
+        final url = Uri.parse('http://localhost:5000/login.php');
+        final response = await http.post(
+          url,
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({'email': email, 'password': password}),
+        );
+
+        if (response.statusCode == 200) {
+          final responseData = jsonDecode(response.body);
+
+          if (responseData['status'] == 'success') {
+            context.read<AuthProvider>().login();
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Login successful!')),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(responseData['error'] ?? 'Login failed')),
+            );
+          }
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Server error, please try again')),
+          );
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
         );
       }
     }
