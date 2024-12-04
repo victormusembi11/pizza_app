@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
+
 import '../providers/auth_provider.dart';
 
 class LoginPage extends StatelessWidget {
@@ -35,7 +36,8 @@ class LoginPage extends StatelessWidget {
           final responseData = jsonDecode(response.body);
 
           if (responseData['status'] == 'success') {
-            context.read<AuthProvider>().login();
+            final role = responseData['data']['role'];
+            context.read<AuthProvider>().login(role);
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Login successful!')),
             );
@@ -65,13 +67,19 @@ class LoginPage extends StatelessWidget {
           children: [
             TextField(
               controller: emailController,
-              decoration: const InputDecoration(labelText: 'Email'),
+              decoration: const InputDecoration(
+                labelText: 'Email',
+                border: OutlineInputBorder(),
+              ),
             ),
             const SizedBox(height: 16),
             TextField(
               controller: passwordController,
+              decoration: InputDecoration(
+                labelText: 'Password',
+                border: OutlineInputBorder(),
+              ),
               obscureText: true,
-              decoration: const InputDecoration(labelText: 'Password'),
             ),
             const SizedBox(height: 32),
             ElevatedButton(
