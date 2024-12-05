@@ -1,9 +1,11 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
 
 import 'package:pizza_app/components/pizza_item.dart';
 import './cart.dart';
+import '../providers/auth_provider.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
@@ -54,9 +56,44 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  void _addToCart(String pizzaName) {
-    // Implement your add-to-cart functionality here
-    print('$pizzaName added to cart!');
+  Future<void> _addToCart(int pizzaId) async {
+    final userId = context.read<AuthProvider>().userId;
+
+    final url = Uri.parse('http://localhost:5000/cart/post.php');
+    final payload = {
+      'user_id': userId.toString(),
+      'pizza_id': pizzaId.toString(),
+    };
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(payload),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['status'] == 'success') {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Added to cart: Pizza ID $pizzaId')),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content: Text('Failed to add to cart: ${data['message']}')),
+          );
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to add to cart: ${response.body}')),
+        );
+      }
+    } catch (error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $error')),
+      );
+    }
   }
 
   @override
@@ -71,7 +108,7 @@ class _MyHomePageState extends State<MyHomePage> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => CartScreen()),
+                MaterialPageRoute(builder: (context) => const CartScreen()),
               );
             },
           ),
@@ -88,7 +125,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   name: pizza['name'],
                   description: pizza['description'],
                   price: pizza['price'],
-                  onAddToCart: () => _addToCart(pizza['name']),
+                  onAddToCart: () => _addToCart(int.parse(pizza['id'])),
                 );
               },
             ),
