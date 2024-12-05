@@ -44,6 +44,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
 
+            // Delete the cart items
+            $delete_sql = "DELETE FROM cart WHERE user_id = ? AND id IN (" . implode(',', $cart_items) . ")";
+            $stmt_delete = mysqli_prepare($conn, $delete_sql);
+
+            mysqli_stmt_bind_param($stmt_delete, 'i', $user_id);
+            mysqli_stmt_execute($stmt_delete);
+
+            if (mysqli_stmt_affected_rows($stmt_delete) <= 0) {
+                throw new Exception("Failed to delete cart items.");
+            }
+
             // Commit the transaction
             mysqli_commit($conn);
             echo json_encode(['status' => 'success', 'message' => 'Order created successfully.', 'order_id' => $order_id]);
