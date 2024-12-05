@@ -1,6 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
+
+import '../providers/auth_provider.dart';
 
 class CartItem extends StatelessWidget {
   final String name;
@@ -50,8 +53,7 @@ class CartScreen extends StatefulWidget {
 
 class _CartScreenState extends State<CartScreen> {
   Future<List<dynamic>> fetchCartItems() async {
-    // Replace with actual user ID from your auth provider
-    final userId = 3;
+    final userId = context.read<AuthProvider>().userId;
 
     final response = await http.get(
       Uri.parse('http://localhost:5000/cart/get.php?user_id=$userId'),
@@ -66,6 +68,48 @@ class _CartScreenState extends State<CartScreen> {
       }
     } else {
       throw Exception('Failed to fetch data from server');
+    }
+  }
+
+  Future<void> makeOrder() async {
+    // Replace with actual user ID from your auth provider
+    final userId = context.read<AuthProvider>().userId;
+    final cartItems = await fetchCartItems();
+
+    // Prepare order data
+    final orderData = {
+      'user_id': userId,
+      'cart_items': cartItems.map((item) {
+        return {
+          'cart_id': item['cart_id'],
+          'quantity': item['quantity'],
+        };
+      }).toList(),
+    };
+
+    // Send POST request to create the order
+    final response = await http.post(
+      Uri.parse('http://localhost:5000/order/post.php'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(orderData),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      if (data['status'] == 'success') {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Order placed successfully!')),
+        );
+        // Optionally navigate to the order details or home screen
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to place order')),
+        );
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error placing order')),
+      );
     }
   }
 
@@ -120,9 +164,7 @@ class _CartScreenState extends State<CartScreen> {
                   padding: const EdgeInsets.all(16),
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () {
-                      // Add "Make Order" functionality here
-                    },
+                    onPressed: makeOrder, // Call makeOrder() when pressed
                     child: const Text('Make Order'),
                   ),
                 ),
