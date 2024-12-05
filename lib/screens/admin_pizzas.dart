@@ -1,9 +1,77 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../components/admin_pizza_item.dart';
 
-class AdminPizzasPage extends StatelessWidget {
+class AdminPizzasPage extends StatefulWidget {
   const AdminPizzasPage({super.key});
+
+  @override
+  _AdminPizzasPageState createState() => _AdminPizzasPageState();
+}
+
+class _AdminPizzasPageState extends State<AdminPizzasPage> {
+  List<dynamic> pizzas = [];
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchPizzas();
+  }
+
+  Future<void> fetchPizzas() async {
+    final url = Uri.parse('http://localhost:5000/pizzas/get.php');
+
+    try {
+      final response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        try {
+          final Map<String, dynamic> jsonResponse = jsonDecode(response.body);
+
+          if (jsonResponse['status'] == 'success') {
+            final List<dynamic> pizzaData = jsonResponse['data'];
+
+            setState(() {
+              pizzas = pizzaData;
+              isLoading = false;
+            });
+          } else {
+            setState(() {
+              isLoading = false;
+            });
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Failed to load pizzas')),
+            );
+          }
+        } catch (e) {
+          setState(() {
+            isLoading = false;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Error decoding JSON response')),
+          );
+        }
+      } else {
+        setState(() {
+          isLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text('Failed to load pizzas: ${response.statusCode}')),
+        );
+      }
+    } catch (error) {
+      setState(() {
+        isLoading = false;
+      });
+      print('Error fetching data: $error');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error fetching data')),
+      );
+    }
+  }
 
   Future<void> _addPizza(BuildContext context) async {
     final _nameController = TextEditingController();
@@ -137,12 +205,26 @@ class AdminPizzasPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: Text(
-          'Manage Pizzas',
-          style: Theme.of(context).textTheme.headlineLarge,
-        ),
-      ),
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : ListView.builder(
+              itemCount: pizzas.length,
+              itemBuilder: (context, index) {
+                final pizza = pizzas[index];
+                return AdminPizzaItem(
+                  imageUrl: pizza['imageUrl'],
+                  name: pizza['name'],
+                  description: pizza['description'],
+                  price: pizza['price'].toString(),
+                  onEdit: () {
+                    // Edit functionality here
+                  },
+                  onDelete: () {
+                    // Delete functionality here
+                  },
+                );
+              },
+            ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _addPizza(context),
         tooltip: 'Add Pizza',
