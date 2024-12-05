@@ -72,22 +72,16 @@ class _CartScreenState extends State<CartScreen> {
   }
 
   Future<void> makeOrder() async {
-    // Replace with actual user ID from your auth provider
     final userId = context.read<AuthProvider>().userId;
     final cartItems = await fetchCartItems();
 
-    // Prepare order data
     final orderData = {
       'user_id': userId,
-      'cart_items': cartItems.map((item) {
-        return {
-          'cart_id': item['cart_id'],
-          'quantity': item['quantity'],
-        };
-      }).toList(),
+      'cart_items': cartItems
+          .map((item) => item['cart_id'])
+          .toList(), // Send only cart_ids
     };
 
-    // Send POST request to create the order
     final response = await http.post(
       Uri.parse('http://localhost:5000/order/post.php'),
       headers: {'Content-Type': 'application/json'},
@@ -100,7 +94,6 @@ class _CartScreenState extends State<CartScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Order placed successfully!')),
         );
-        // Optionally navigate to the order details or home screen
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Failed to place order')),
@@ -164,7 +157,7 @@ class _CartScreenState extends State<CartScreen> {
                   padding: const EdgeInsets.all(16),
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: makeOrder, // Call makeOrder() when pressed
+                    onPressed: makeOrder,
                     child: const Text('Make Order'),
                   ),
                 ),
