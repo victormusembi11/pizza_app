@@ -30,6 +30,37 @@ class _AdminOrdersPageState extends State<AdminOrdersPage> {
     }
   }
 
+  // Method to update the order status
+  Future<void> updateOrderStatus(int orderId, String newStatus) async {
+    final response = await http.post(
+      Uri.parse('http://localhost:5000/order/update_status.php'),
+      headers: <String, String>{
+        'Content-Type': 'application/json',
+      },
+      body: json.encode({
+        'order_id': orderId,
+        'status': newStatus,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      if (data['status'] == 'success') {
+        // If successful, show a success message and reload the orders
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Order status updated successfully.')));
+        setState(() {
+          orders = fetchOrders(); // Refresh the order list
+        });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to update order status.')));
+      }
+    } else {
+      throw Exception('Failed to update order status');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -86,8 +117,47 @@ class _AdminOrdersPageState extends State<AdminOrdersPage> {
                         ),
                         const SizedBox(height: 10),
                         ElevatedButton(
-                          onPressed: () {
-                            // Add functionality to update order status here
+                          onPressed: () async {
+                            // Show a dialog to confirm the status update
+                            String? selectedStatus = await showDialog<String>(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return AlertDialog(
+                                  title: const Text('Update Order Status'),
+                                  content: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: <Widget>[
+                                      ListTile(
+                                        title: const Text('Pending'),
+                                        onTap: () => Navigator.of(context)
+                                            .pop('PENDING'),
+                                      ),
+                                      ListTile(
+                                        title: const Text('Processing'),
+                                        onTap: () => Navigator.of(context)
+                                            .pop('PROCESSING'),
+                                      ),
+                                      ListTile(
+                                        title: const Text('Completed'),
+                                        onTap: () => Navigator.of(context)
+                                            .pop('COMPLETED'),
+                                      ),
+                                      ListTile(
+                                        title: const Text('Cancelled'),
+                                        onTap: () => Navigator.of(context)
+                                            .pop('CANCELLED'),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            );
+
+                            // If the user selects a status, update it
+                            if (selectedStatus != null) {
+                              await updateOrderStatus(
+                                  order.orderId, selectedStatus);
+                            }
                           },
                           child: const Text('Update Order Status'),
                         ),
