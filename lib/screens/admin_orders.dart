@@ -47,14 +47,14 @@ class _AdminOrdersPageState extends State<AdminOrdersPage> {
       final data = json.decode(response.body);
       if (data['status'] == 'success') {
         // If successful, show a success message and reload the orders
-        ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Order status updated successfully.')));
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Order status updated successfully.')));
         setState(() {
           orders = fetchOrders(); // Refresh the order list
         });
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to update order status.')));
+            const SnackBar(content: Text('Failed to update order status.')));
       }
     } else {
       throw Exception('Failed to update order status');
@@ -204,16 +204,16 @@ class Order {
 
 // OrderItem model
 class OrderItem {
-  final String pizzaName;
-  final int quantity;
-  final String price;
-  final String description;
+  final String? pizzaName;
+  final int? quantity;
+  final String? price;
+  final String? description;
 
   OrderItem({
-    required this.pizzaName,
-    required this.quantity,
-    required this.price,
-    required this.description,
+    this.pizzaName,
+    this.quantity,
+    this.price,
+    this.description,
   });
 
   factory OrderItem.fromJson(Map<String, dynamic> json) {
