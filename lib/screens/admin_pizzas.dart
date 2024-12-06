@@ -20,6 +20,115 @@ class _AdminPizzasPageState extends State<AdminPizzasPage> {
     fetchPizzas();
   }
 
+  Future<void> _editPizza(BuildContext context, dynamic pizza) async {
+    final _nameController = TextEditingController(text: pizza['name']);
+    final _descriptionController =
+        TextEditingController(text: pizza['description']);
+    final _priceController =
+        TextEditingController(text: pizza['price'].toString());
+    final _imageUrlController = TextEditingController(text: pizza['imageUrl']);
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20.0),
+          ),
+          title: const Text('Edit Pizza', style: TextStyle(fontSize: 24)),
+          content: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildTextField(
+                      _nameController, 'Pizza Name', Icons.local_pizza),
+                  const SizedBox(height: 10),
+                  _buildTextField(
+                      _descriptionController, 'Description', Icons.description),
+                  const SizedBox(height: 10),
+                  _buildTextField(_priceController, 'Price', Icons.attach_money,
+                      keyboardType: TextInputType.number),
+                  const SizedBox(height: 10),
+                  _buildTextField(
+                      _imageUrlController, 'Image URL', Icons.image),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.red,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              ),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Cancel', style: TextStyle(fontSize: 16)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 30, vertical: 10),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(5),
+                ),
+              ),
+              onPressed: () async {
+                final name = _nameController.text;
+                final description = _descriptionController.text;
+                final price = _priceController.text;
+                final imageUrl = _imageUrlController.text;
+
+                if (name.isEmpty ||
+                    description.isEmpty ||
+                    price.isEmpty ||
+                    imageUrl.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Please fill in all fields')),
+                  );
+                  return;
+                }
+
+                final url =
+                    Uri.parse('http://localhost:5000/pizzas/update.php');
+                final response = await http.put(url,
+                    headers: {'Content-Type': 'application/json'},
+                    body: jsonEncode({
+                      'id': pizza['id'],
+                      'name': name,
+                      'description': description,
+                      'price': double.parse(price),
+                      'imageUrl': imageUrl,
+                    }));
+
+                final responseData = jsonDecode(response.body);
+
+                if (response.statusCode == 200 &&
+                    responseData['status'] == 'success') {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Pizza updated successfully')),
+                  );
+                  Navigator.of(context).pop();
+                  fetchPizzas(); // Reload pizzas after edit
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Failed to update pizza')),
+                  );
+                }
+              },
+              child: const Text('Update Pizza', style: TextStyle(fontSize: 16)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Future<void> fetchPizzas() async {
     final url = Uri.parse('http://localhost:5000/pizzas/get.php');
 
@@ -218,7 +327,7 @@ class _AdminPizzasPageState extends State<AdminPizzasPage> {
                   price: pizza['price'].toString(),
                   pizzaId: pizza['id'],
                   onEdit: () {
-                    // Edit functionality here
+                    _editPizza(context, pizza);
                   },
                   onDelete: () {
                     _deletePizza(int.parse(pizza['id']));
