@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 
 import '../providers/auth_provider.dart';
+import './register.dart';
 
 class LoginPage extends StatelessWidget {
   const LoginPage({super.key});
@@ -90,6 +91,20 @@ class LoginPage extends StatelessWidget {
             ElevatedButton(
               onPressed: _login,
               child: const Text('Login'),
+            ),
+            const SizedBox(height: 16),
+            const SizedBox(height: 16),
+            TextButton(
+              onPressed: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => const RegisterPage()),
+                );
+              },
+              child: const Text(
+                "Don't have an account? Click here to create an account",
+                style: TextStyle(color: Colors.green),
+              ),
             ),
           ],
         ),
