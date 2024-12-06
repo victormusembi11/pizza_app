@@ -5,18 +5,20 @@ class AdminPizzaItem extends StatelessWidget {
   final String name;
   final String description;
   final String price;
+  final String pizzaId;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
 
   const AdminPizzaItem({
-    super.key,
+    Key? key,
     required this.imageUrl,
     required this.name,
     required this.description,
     required this.price,
+    required this.pizzaId,
     required this.onEdit,
     required this.onDelete,
-  });
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {

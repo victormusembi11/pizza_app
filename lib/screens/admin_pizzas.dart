@@ -216,11 +216,12 @@ class _AdminPizzasPageState extends State<AdminPizzasPage> {
                   name: pizza['name'],
                   description: pizza['description'],
                   price: pizza['price'].toString(),
+                  pizzaId: pizza['id'],
                   onEdit: () {
                     // Edit functionality here
                   },
                   onDelete: () {
-                    // Delete functionality here
+                    _deletePizza(int.parse(pizza['id']));
                   },
                 );
               },
@@ -232,5 +233,25 @@ class _AdminPizzasPageState extends State<AdminPizzasPage> {
         child: const Icon(Icons.add),
       ),
     );
+  }
+
+  Future<void> _deletePizza(int pizzaId) async {
+    final url = Uri.parse('http://localhost:5000/pizzas/delete.php');
+    final response = await http.delete(url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'id': pizzaId}));
+
+    final responseData = jsonDecode(response.body);
+
+    if (response.statusCode == 200 && responseData['status'] == 'success') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Pizza deleted successfully')),
+      );
+      fetchPizzas(); // Reload pizzas after deletion
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to delete pizza')),
+      );
+    }
   }
 }
