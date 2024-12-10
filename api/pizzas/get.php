@@ -13,11 +13,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
     if (mysqli_num_rows($result) > 0) {
         $pizzas = [];
-        
+
         while ($row = mysqli_fetch_assoc($result)) {
             $pizzas[] = $row;
         }
-        
+
         echo json_encode(['status' => 'success', 'data' => $pizzas]);
     } else {
         echo json_encode(['status' => 'success', 'data' => []]);

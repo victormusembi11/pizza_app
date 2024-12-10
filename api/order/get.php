@@ -35,9 +35,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
         echo json_encode(['status' => 'success', 'data' => $orders]);
     } else {
-        echo json_encode(['status' => 'success', 'data' => []]); 
+        echo json_encode(['status' => 'success', 'data' => []]);
     }
 } else {
     echo json_encode(['status' => 'error', 'message' => 'Invalid request method. Use GET.']);
 }
-?>

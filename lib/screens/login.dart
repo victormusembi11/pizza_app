@@ -71,6 +71,7 @@ class LoginPage extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            Image.asset('pizza-logo.png', height: 150.0),
             TextField(
               controller: emailController,
               decoration: const InputDecoration(

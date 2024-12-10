@@ -14,13 +14,52 @@ class RegisterPage extends StatelessWidget {
     final passwordController = TextEditingController();
 
     Future<void> _register() async {
-      final name = nameController.text;
-      final email = emailController.text;
+      final name = nameController.text.trim();
+      final email = emailController.text.trim();
       final password = passwordController.text;
 
+      // Validation helper functions
+      bool _isValidName(String name) {
+        return RegExp(r"^[a-zA-Z\s]+$").hasMatch(name);
+      }
+
+      bool _isValidEmail(String email) {
+        return RegExp(
+                r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+")
+            .hasMatch(email);
+      }
+
+      bool _isValidPassword(String password) {
+        return password.length >= 6;
+      }
+
+      // Validation logic
       if (name.isEmpty || email.isEmpty || password.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Please fill in all fields')),
+        );
+        return;
+      }
+
+      if (!_isValidName(name)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('Name can only contain letters and spaces')),
+        );
+        return;
+      }
+
+      if (!_isValidEmail(email)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please enter a valid email address')),
+        );
+        return;
+      }
+
+      if (!_isValidPassword(password)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('Password must be at least 6 characters long')),
         );
         return;
       }
@@ -76,6 +115,7 @@ class RegisterPage extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            Image.asset('pizza-logo.png', height: 150.0),
             TextField(
               controller: nameController,
               decoration: const InputDecoration(
@@ -90,6 +130,7 @@ class RegisterPage extends StatelessWidget {
                 labelText: 'Email',
                 border: OutlineInputBorder(),
               ),
+              keyboardType: TextInputType.emailAddress,
             ),
             const SizedBox(height: 16),
             TextField(
